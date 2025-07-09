@@ -1,0 +1,75 @@
+# Esse arquivo no futuro vai virar um CLI
+from backend import create_project, check_dir, add_all, clean_up, version, input, work
+from os import commandLineParams, getHomeDir
+from parseopt import initOptParser, cmdEnd, cmdShortOption, cmdLongOption, cmdArgument, next
+import strformat, strutils
+
+
+const
+  help = fmt"""
+
+VMaker {version}
+
+Uma pequena ferramenta CLI para compilação de vídeos
+
+
+OPÇÕES:
+  -s                           > cria uma pasta para o projeto
+  
+  -s:name_of_project           > cria uma pasta para o projeto
+
+  -i                           > inicializa a compilação dos vídeos
+
+  -i:nocleanup                 > inicializa a compilação e não limpa o lixo gerado
+
+   -h                           > mostra esta mensagem
+  
+"""
+
+var 
+  pname: string
+
+
+proc main =
+  var p = initOptParser(commandLineParams())
+  var
+    preprosessed: bool = false
+    ratio: string = "16/9"
+    scale: string = "1920:1080"
+    fps: string = "30"
+
+  if commandLineParams().len == 0:
+      echo help
+      quit(0)
+
+  while true:
+    p.next()
+    case p.kind:
+    of cmdEnd: break
+    
+    of cmdShortOption, cmdLongOption:
+      if p.key == "s" and p.val != "":
+        create_project(p.val)
+
+      elif p.key == "s" and p.val == "":
+        pname = input("Entre o nome do projeto: ")
+        create_project(pname)
+
+      if p.key == "i":
+        echo(fmt"Using user configuration: $# $# $# $#" % [preprosessed, ratio, scale, fps])
+        if p.val == "nocleanup":
+          work(preprosessed=preprosessed, ratio=ratio, scale=scale, fps=fps, nocleanup=true)
+
+        else:
+          work(preprosessed=preprosessed, ratio=ratio, scale=scale, fps=fps)
+      
+      if p.key == "h":
+        echo help
+
+
+    of cmdArgument:
+      echo help
+
+
+when isMainModule:
+  main()

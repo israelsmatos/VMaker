@@ -1,0 +1,72 @@
+#!/usr/bin/bash
+
+DEF_DIR=$HOME/usr/local/vmaker/bin/
+DEF_SHARE=$HOME/usr/local/share/vmaker/assets/
+CURR_ASSET=file.wav
+DIR_ASSETS=./assets/
+FILELO="$DIR_ASSETS/$CURR_ASSET"
+
+RECORD=$(stat -c %s $FILELO | grep [0-9] || echo -1)
+
+DEF_SHARE_EXISTS=false
+DEF_DIR_EXISTS=false
+CURR_ASSET_EXISTS=false
+DIR_ASSETS_EXISTS=false
+
+if [ $RECORD == -1 ]; then
+    echo 'STATIC ASSET FILE NOT FOUND.'
+    exit
+fi
+
+if [ -d $DEF_DIR ]; then
+    # mkdir DEF_DIR
+    echo "$DEF_DIR doesn't exists. Creating..."
+    DEF_DIR_EXISTS=true
+else
+    DEF_DIR_EXISTS=true
+fi
+
+if [ -d $DEF_SHARE ]; then
+    # mkdir DEF_SHARE
+    echo "$DEF_SHARE doesn't exist. Creating..."
+    DEF_SHARE_EXISTS=true
+else
+    DEF_SHARE_EXISTS=true
+fi
+
+if [ -d $CURR_ASSET ]; then
+    CURR_ASSET_EXISTS=true
+fi
+
+if [ -d $DIR_ASSETS ]; then
+    DIR_ASSETS_EXISTS=true
+fi
+
+
+if [ DEF_SHARE_EXISTS == true ] && [ DEF_DIR_EXISTS == true ] && [ CURR_ASSET_EXISTS == true ] && [ DIR_ASSETS_EXISTS == true ]; then
+    echo "Everything OK"
+    echo "\n\nCOMPILING...\n\n"
+    time nimble build --cc:gcc --passC=-std=c++17 -d:release --verbose
+    echo "\n\nINSTALLING...\n\n"
+    chmod +x vmaker
+    mv vmaker $DEF_DIR
+
+    echo "\n\nCOPYING ASSETS\n\n"
+    cp -r $FILELO "$DEF_SHARE/$CURR_ASSET"
+
+    echo "\n\nADDING TO PATH\n\n"
+    export $PATH:$DEF_DIR
+
+    if [ -d "$DEF_DIR/vmaker" ]; then
+        echo "Everything OK"
+        echo "Installation successfull!"
+    else
+        echo "Couldnt install properly. SEE LOGS"
+else
+    echo "Couldn't compile. One of the directories needed doesn't exist."
+fi
+
+
+# chmod +x vmaker
+# mv ./vmaker DEF_DIR+"vmaker"
+# cp -r CURR_ASSET 
